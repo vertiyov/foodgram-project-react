@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinLengthValidator
 from django.db import models
+from .validators import validate_username
 
 
 class User(AbstractUser):
@@ -17,7 +19,7 @@ class User(AbstractUser):
     )
     email = models.EmailField(
         'Электронная почта',
-        max_length=255,
+        max_length=254,
         unique=True,
         blank=False,
         null=False,
@@ -28,6 +30,7 @@ class User(AbstractUser):
         unique=True,
         blank=False,
         null=False,
+        validators=[MinLengthValidator(3), validate_username]
     )
     password = models.CharField(
         'Пароль',
