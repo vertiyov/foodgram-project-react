@@ -8,8 +8,19 @@ class Recipe(models.Model):
 class Tag(models.Model):
     pass
 
-class Ingridient(models.Model):
-    pass
+class Ingredient(models.Model):
+    name = models.CharField(
+        'Название ингредиента',
+        max_length=80,
+        blank=False,
+        null=False,
+    )
+    unit = models.CharField(
+        'Единица измерения',
+        max_length=20,
+        blank=False,
+        null=False,
+    )
 
 class FavoriteList(models.Model):
     pass

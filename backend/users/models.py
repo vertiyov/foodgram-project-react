@@ -6,7 +6,7 @@ from .validators import validate_username
 
 class User(AbstractUser):
     first_name = models.CharField(
-        verbose_name='Имя',
+        'Имя',
         max_length=80,
         blank=False,
         null=False,
@@ -34,7 +34,7 @@ class User(AbstractUser):
     )
     password = models.CharField(
         'Пароль',
-        max_length=100,
+        max_length=254,
         unique=True,
         blank=False,
         null=False,
