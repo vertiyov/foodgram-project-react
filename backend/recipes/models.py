@@ -6,17 +6,37 @@ class Recipe(models.Model):
     pass
 
 class Tag(models.Model):
-    pass
+    name = models.CharField(
+        'Name',
+        max_length=80,
+        unique=True,
+        blank=False,
+        null=False,
+    )
+    slug = models.SlugField(
+        'Slug',
+        max_length=80,
+        unique=True,
+        blank=False,
+        null=False,
+    )
+    color = models.CharField(
+        'Color',
+        max_length=7,
+        unique=True,
+        blank=False,
+        null=False,
+    )
 
 class Ingredient(models.Model):
     name = models.CharField(
-        'Название ингредиента',
+        'Name',
         max_length=80,
         blank=False,
         null=False,
     )
     unit = models.CharField(
-        'Единица измерения',
+        'Unit',
         max_length=40,
         blank=False,
         null=False,

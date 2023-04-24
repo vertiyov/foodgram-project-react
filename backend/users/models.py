@@ -6,26 +6,26 @@ from .validators import validate_username
 
 class User(AbstractUser):
     first_name = models.CharField(
-        'Имя',
+        'First name',
         max_length=80,
         blank=False,
         null=False,
     )
     last_name = models.CharField(
-        'Фамилия',
+        'Last name',
         max_length=80,
         blank=False,
         null=False,
     )
     email = models.EmailField(
-        'Электронная почта',
-        max_length=254,
+        'Email',
+        max_length=255,
         unique=True,
         blank=False,
         null=False,
     )
     username = models.CharField(
-        'Логин',
+        'Username',
         max_length=40,
         unique=True,
         blank=False,
@@ -33,8 +33,8 @@ class User(AbstractUser):
         validators=[MinLengthValidator(3), validate_username]
     )
     password = models.CharField(
-        'Пароль',
-        max_length=254,
+        'Password',
+        max_length=255,
         unique=True,
         blank=False,
         null=False,
