@@ -10,4 +10,3 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Subscribe)
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'author')
-    list_editable = ('user', 'author')

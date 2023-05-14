@@ -19,6 +19,8 @@ class Tag(models.Model):
         max_length=7,
         unique=True,
     )
+    def __str__(self):
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -34,6 +36,9 @@ class Ingredient(models.Model):
         blank=False,
         null=False,
     )
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
@@ -58,15 +63,15 @@ class Recipe(models.Model):
         upload_to='recipes_image/',
         blank=True,
     )
-    description = models.TextField(
+    text = models.TextField(
         'Description',
         unique=True,
     )
-    tag = models.ManyToManyField(
+    tags = models.ManyToManyField(
         Tag,
         verbose_name='Tags',
     )
-    time = models.PositiveIntegerField(
+    cooking_time = models.PositiveIntegerField(
         'Cooking time',
     )
 
@@ -90,8 +95,28 @@ class RecipeIngredient(models.Model):
     )
 
 
-class FavoriteList(models.Model):
-    pass
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='User',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Recipe',
+    )
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_userfavorite_recipe'
+            )
+        ]
+        verbose_name_plural = 'Избранное'
 
 
 class ShoppingCart(models.Model):
