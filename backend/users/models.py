@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator
 from django.db import models
+
 from .validators import validate_username
 
 
@@ -51,13 +52,13 @@ class Subscribe(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscriber',
+        related_name='follower',
         verbose_name='Subscriber'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribing',
+        related_name='following',
         verbose_name='Subscribing'
     )
 

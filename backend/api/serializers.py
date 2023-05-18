@@ -1,11 +1,12 @@
 from djoser.serializers import UserSerializer, UserCreateSerializer
-from rest_framework import serializers
-from users.models import User, Subscribe
-from recipes.models import Ingredient, Tag, Recipe, Favorite,\
-    RecipeIngredient, ShoppingCart
 from drf_base64.fields import Base64ImageField
-from api.utils import create_ingredients
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+
+from api.utils import create_ingredients
+from recipes.models import Ingredient, Tag, Recipe, Favorite, \
+    RecipeIngredient, ShoppingCart
+from users.models import User, Subscribe
 
 
 class UserSignUpSerializer(UserCreateSerializer):
@@ -41,7 +42,7 @@ class IngredientGetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient.id', read_only=True)
     name = serializers.CharField(source='ingredient.name', read_only=True)
     unit = serializers.CharField(
-        source='ingredient.measurement_unit',
+        source='ingredient.unit',
         read_only=True
     )
 
@@ -70,6 +71,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('id', 'name',
                   'image', 'cooking_time')
+
 
 class RecipeShortSerializer(serializers.ModelSerializer):
     class Meta:
@@ -127,12 +129,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingredient in data.get('recipeingredients'):
             if ingredient.get('amount') <= 0:
                 raise serializers.ValidationError(
-                    'Количество не может быть меньше 1'
+                    'Количество не может быть < 1'
                 )
             ingredients_list.append(ingredient.get('id'))
         if len(set(ingredients_list)) != len(ingredients_list):
             raise serializers.ValidationError(
-                'Вы пытаетесь добавить в рецепт два одинаковых ингредиента'
+                'Вы добавляете в рецепт два одинаковых ингредиента'
             )
         return data
 
@@ -184,3 +186,59 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             instance.recipe,
             context={'request': request}
         ).data
+
+
+class UserSubscribeViewSerializer(UserGetSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+        read_only_fields = ('email', 'username', 'first_name', 'last_name',
+                            'is_subscribed', 'recipes', 'recipes_count')
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = None
+        if request:
+            recipes_limit = request.query_params.get('recipes_limit')
+        recipes = obj.recipes.all()
+        if recipes_limit:
+            recipes = obj.recipes.all()[:int(recipes_limit)]
+        return RecipeShortSerializer(recipes, many=True,
+                                     context={'request': request}).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+
+class UserSubscribeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscribe
+        fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscribe.objects.all(),
+                fields=('user', 'author'),
+                message='Вы уже подписаны на пользователя'
+            )
+        ]
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.user == data['author']:
+            raise serializers.ValidationError(
+                'Нельзя подписываться на себя'
+            )
+        return data
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return UserSubscribeViewSerializer(
+            instance.author, context={'request': request}
+        ).data
+
+

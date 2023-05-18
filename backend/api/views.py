@@ -1,15 +1,18 @@
-from rest_framework import viewsets, filters, status
-from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404, HttpResponse
 from django.db.models import Sum
+from django.shortcuts import get_object_or_404, HttpResponse
+from rest_framework import viewsets, filters, status, mixins
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from api.permissions import IsAdminAuthorOrReadOnly
 from api.utils import create_model_instance, delete_model_instance
-
 from recipes.models import Ingredient, Tag, Recipe, Favorite, RecipeIngredient, ShoppingCart
-from .serializers import IngredientSerializer, TagSerializer,\
-    RecipeSerializer, RecipeGetSerializer, RecipeCreateSerializer, ShoppingCartSerializer
+from users.models import User, Subscribe
+from .serializers import IngredientSerializer, TagSerializer, \
+    RecipeSerializer, RecipeGetSerializer, RecipeCreateSerializer, ShoppingCartSerializer, UserSubscribeSerializer, \
+    UserSubscribeViewSerializer
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -58,7 +61,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             get_object_or_404(Favorite, user=request.user,
                               recipe=recipe).delete()
-            return Response({'detail': 'Рецепт успешно удален из избранного.'},
+            return Response({'detail': 'Рецепт удален из избранного.'},
                             status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -73,7 +76,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                          ShoppingCartSerializer)
 
         if request.method == 'DELETE':
-            error_message = 'У вас нет этого рецепта в списке покупок'
+            error_message = 'У вас нет рецепта в списке покупок'
             return delete_model_instance(request, ShoppingCart,
                                          recipe, error_message)
 
@@ -83,7 +86,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ]
     )
     def download_shopping_cart(self, request):
-        """Отправка файла со списком покупок."""
         ingredients = RecipeIngredient.objects.filter(
             recipe__carts__user=request.user
         ).values(
@@ -96,7 +98,39 @@ class RecipeViewSet(viewsets.ModelViewSet):
             amount = ingredient['ingredient_amount']
             shopping_list.append(f'\n{name} - {amount}, {unit}')
         response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = \
-            'attachment; filename="shopping_cart.txt"'
+        response['Content-Disposition'] = 'attachment; filename="shopping_cart.txt"'
         return response
 
+
+class UserSubscribeView(APIView):
+
+    def delete(self, request, user_id):
+        author = get_object_or_404(User, id=user_id)
+        if not Subscribe.objects.filter(user=request.user,
+                                        author=author).exists():
+            return Response(
+                {'errors': 'Вы не подписаны на пользователя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        Subscribe.objects.get(user=request.user.id,
+                              author=user_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def post(self, request, user_id):
+        author = get_object_or_404(User, id=user_id)
+        serializer = UserSubscribeSerializer(
+            data={'user': request.user.id, 'author': author.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+class UserSubscriptionsViewSet(mixins.ListModelMixin,
+                               viewsets.GenericViewSet):
+    serializer_class = UserSubscribeViewSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(following__user=self.request.user)

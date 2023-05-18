@@ -1,7 +1,8 @@
-from recipes.models import Ingredient, RecipeIngredient
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import serializers, status
+
+from recipes.models import Ingredient, RecipeIngredient
 
 
 def create_ingredients(ingredients, recipe):
@@ -18,6 +19,7 @@ def create_ingredients(ingredients, recipe):
             )
         )
     RecipeIngredient.objects.bulk_create(ingredient_list)
+
 
 def create_model_instance(request, instance, serializer):
     serializer = serializer(
