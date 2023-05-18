@@ -177,6 +177,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             )
         ]
 
+
     def to_representation(self, instance):
         request = self.context.get('request')
         return RecipeShortSerializer(
