@@ -19,6 +19,7 @@ class Tag(models.Model):
         max_length=7,
         unique=True,
     )
+
     def __str__(self):
         return self.name
 
@@ -108,6 +109,7 @@ class Favorite(models.Model):
         related_name='favorites',
         verbose_name='Recipe',
     )
+
     class Meta:
         ordering = ['-id']
         constraints = [
@@ -120,4 +122,25 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    pass
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='carts',
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='carts',
+        verbose_name='Рецепт',
+    )
+
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe_cart'
+            )
+        ]
+        verbose_name = 'Список покупок'
