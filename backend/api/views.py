@@ -1,7 +1,7 @@
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, HttpResponse
 from rest_framework import viewsets, filters, status, mixins
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,9 +10,9 @@ from api.permissions import IsAdminAuthorOrReadOnly
 from api.utils import create_model_instance, delete_model_instance
 from recipes.models import Ingredient, Tag, Recipe, Favorite, RecipeIngredient, ShoppingCart
 from users.models import User, Subscribe
-from .serializers import IngredientSerializer, TagSerializer, \
-    RecipeSerializer, RecipeGetSerializer, RecipeCreateSerializer, ShoppingCartSerializer, UserSubscribeSerializer, \
-    UserSubscribeViewSerializer
+from .serializers import (IngredientSerializer, TagSerializer,
+    RecipeSerializer, RecipeGetSerializer, RecipeCreateSerializer, ShoppingCartSerializer,
+    UserSubscribeSerializer, UserSubscribeViewSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -102,7 +102,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
 
-class UserSubscribeView(APIView):
+class UserSubscriptionsViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSubscribeViewSerializer
+    permission_classes = [IsAuthenticated,]
+
+    def get_queryset(self):
+        return User.objects.filter(following__user=self.request.user)
+
+    def post(self, request, user_id):
+        author = get_object_or_404(User, id=user_id)
+        serializer = UserSubscribeSerializer(
+            data={'user': request.user.id, 'author': author.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, user_id):
         author = get_object_or_404(User, id=user_id)
@@ -115,22 +130,3 @@ class UserSubscribeView(APIView):
         Subscribe.objects.get(user=request.user.id,
                               author=user_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def post(self, request, user_id):
-        author = get_object_or_404(User, id=user_id)
-        serializer = UserSubscribeSerializer(
-            data={'user': request.user.id, 'author': author.id},
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-
-class UserSubscriptionsViewSet(mixins.ListModelMixin,
-                               viewsets.GenericViewSet):
-    serializer_class = UserSubscribeViewSerializer
-
-    def get_queryset(self):
-        return User.objects.filter(following__user=self.request.user)

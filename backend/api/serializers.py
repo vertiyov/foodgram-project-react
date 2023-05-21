@@ -4,12 +4,14 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import create_ingredients
-from recipes.models import Ingredient, Tag, Recipe, Favorite, \
-    RecipeIngredient, ShoppingCart
+from recipes.models import (Ingredient, Tag, Recipe, Favorite,
+    RecipeIngredient, ShoppingCart)
 from users.models import User, Subscribe
 
 
 class UserSignUpSerializer(UserCreateSerializer):
+    #  Это отдельный сериализатор для регистрации пользователя. Если объеденить его с UserGetSerializer,
+    # появляются проблемы с полем пароля и в последствии получением токена
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
@@ -148,7 +150,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        print(instance)
         ingredients = validated_data.pop('recipeingredients')
         tags = validated_data.pop('tags')
         instance.tags.clear()

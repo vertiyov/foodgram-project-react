@@ -1,23 +1,30 @@
+from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
+from foodgram.settings import NAME_MAX_LENGTH, COLOR_MAX_LENGTH, UNIT_MAX_LENGTH
 
 
 class Tag(models.Model):
     name = models.CharField(
         'Name',
-        max_length=80,
+        max_length=NAME_MAX_LENGTH,
         unique=True,
     )
     slug = models.SlugField(
         'Slug',
-        max_length=80,
+        max_length=NAME_MAX_LENGTH,
         unique=True,
     )
     color = models.CharField(
         'Color',
-        max_length=7,
+        max_length=COLOR_MAX_LENGTH,
         unique=True,
+        validators=[
+            RegexValidator(
+                regex='^#(?:[0-9a-fA-F]{3}){1,2}$',
+                code='invalid_color'),
+        ]
     )
 
     def __str__(self):
@@ -27,15 +34,11 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         'Name',
-        max_length=80,
-        blank=False,
-        null=False,
+        max_length=NAME_MAX_LENGTH,
     )
     unit = models.CharField(
         'Unit',
-        max_length=40,
-        blank=False,
-        null=False,
+        max_length=UNIT_MAX_LENGTH,
     )
 
     def __str__(self):
@@ -51,13 +54,14 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         'Name',
-        max_length=80,
+        max_length=NAME_MAX_LENGTH,
         unique=True,
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         through='RecipeIngredient',
-        verbose_name='Ingredients',
+        verbose_name='ingredients',
+        related_name='ingredients'
     )
     image = models.ImageField(
         'Image',
@@ -72,7 +76,7 @@ class Recipe(models.Model):
         Tag,
         verbose_name='Tags',
     )
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'Cooking time',
     )
 
@@ -88,12 +92,14 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='recipe_ingredients',
         verbose_name='Ingredient'
     )
     amount = models.IntegerField(
-        'Amount',
+        validators=[MinValueValidator(1)],
+        verbose_name='Количество ингредиентов'
     )
+    def __str__(self):
+        return f'{self.ingredient} in {self.recipe}. Amount: {self.amount}'
 
 
 class Favorite(models.Model):
@@ -106,7 +112,6 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='favorites',
         verbose_name='Recipe',
     )
 
@@ -131,7 +136,6 @@ class ShoppingCart(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='carts',
         verbose_name='Рецепт',
     )
 
