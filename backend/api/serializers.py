@@ -1,13 +1,10 @@
-from djoser.serializers import UserSerializer, UserCreateSerializer
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import create_ingredients
-from recipes.models import (Ingredient, Tag, Recipe, Favorite,
-    RecipeIngredient, ShoppingCart)
+from recipes.models import (Ingredient, Tag, Recipe, RecipeIngredient, ShoppingCart)
 from users.models import User, Subscribe
-
 
 
 class UserGetSerializer(serializers.ModelSerializer):

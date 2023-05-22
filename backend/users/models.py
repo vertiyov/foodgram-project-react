@@ -1,8 +1,8 @@
-from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinLengthValidator, RegexValidator
-from django.db import models
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.validators import MinLengthValidator
+from django.db import models
 
 from api.core.validators import RegExNameValidator
 

@@ -1,18 +1,17 @@
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, HttpResponse
-from rest_framework import viewsets, filters, status, mixins
-from rest_framework.decorators import action, api_view
+from rest_framework import viewsets, filters, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from api.permissions import IsAdminAuthorOrReadOnly
 from api.utils import create_model_instance, delete_model_instance
 from recipes.models import Ingredient, Tag, Recipe, Favorite, RecipeIngredient, ShoppingCart
 from users.models import User, Subscribe
 from .serializers import (IngredientSerializer, TagSerializer,
-    RecipeSerializer, RecipeGetSerializer, RecipeCreateSerializer, ShoppingCartSerializer,
-    UserSubscribeSerializer, UserSubscribeViewSerializer)
+                          RecipeSerializer, RecipeGetSerializer, RecipeCreateSerializer, ShoppingCartSerializer,
+                          UserSubscribeSerializer, UserSubscribeViewSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
