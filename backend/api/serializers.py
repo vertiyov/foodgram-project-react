@@ -9,29 +9,35 @@ from recipes.models import (Ingredient, Tag, Recipe, Favorite,
 from users.models import User, Subscribe
 
 
-class UserSignUpSerializer(UserCreateSerializer):
-    #  Это отдельный сериализатор для регистрации пользователя. Если объеденить его с UserGetSerializer,
-    # появляются проблемы с полем пароля и в последствии получением токена
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'password')
 
+class UserGetSerializer(serializers.ModelSerializer):
 
-class UserGetSerializer(UserSerializer):
+    password = serializers.CharField(write_only=True)
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'is_subscribed')
+        fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'password', 'is_subscribed'
+        )
+        write_only_fields = ('password',)
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         return (request.user.is_authenticated
-                and Subscribe.objects.filter(
-                    user=request.user, author=obj
-                ).exists())
+                and request.user.follower.filter(author=obj).exists())
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -99,18 +105,12 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         return (request and request.user.is_authenticated
-                and Favorite.objects.filter(
-                    user=request.user, recipe=obj
-                ).exists())
+                and request.user.favorites.filter(recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         return (request and request.user.is_authenticated
-                and ShoppingCart.objects.filter(
-                    user=request.user, recipe=obj
-                ).exists())
-
-
+                and request.user.carts.filter(recipe=obj).exists())
 class RecipeCreateSerializer(serializers.ModelSerializer):
     ingredients = IngredientPostSerializer(
         many=True, source='recipeingredients'

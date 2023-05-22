@@ -154,15 +154,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
+    'SERIALIZERS': {
+        'user_create': 'api.serializers.UserGetSerializer',
+        'current_user': 'users.serializers.UserGetSerializer',
+        'user': 'api.serializers.UserGetSerializer',
+    },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny'],
         'user': ['rest_framework.permissions.AllowAny'],
     },
-    'SERIALIZERS': {
-        'user_create': 'api.serializers.UserSignUpSerializer',
-        'user': 'api.serializers.UserGetSerializer',
-        },
-
 }
 
 
@@ -170,3 +170,7 @@ NAME_MAX_LENGTH = 80
 PASSWORD_MAX_LENGTH = 255
 COLOR_MAX_LENGTH = 7
 UNIT_MAX_LENGTH = 40
+MIN_AMOUNT_VALUE = 1
+MAX_AMOUNT_VALUE = 30
+MIN_COOKING_TIME = 1
+MIN_USERNAME_LENGTH = 3

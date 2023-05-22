@@ -50,8 +50,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer = RecipeSerializer(recipe, data=request.data,
                                           context={"request": request})
             serializer.is_valid(raise_exception=True)
-            if not Favorite.objects.filter(user=request.user,
-                                           recipe=recipe).exists():
+            if not request.user.favorites.filter(recipe=recipe).exists():
                 Favorite.objects.create(user=request.user, recipe=recipe)
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
@@ -121,8 +120,7 @@ class UserSubscriptionsViewSet(viewsets.ModelViewSet):
 
     def delete(self, request, user_id):
         author = get_object_or_404(User, id=user_id)
-        if not Subscribe.objects.filter(user=request.user,
-                                        author=author).exists():
+        if not request.user.follower.filter(author=author).exists():
             return Response(
                 {'errors': 'Вы не подписаны на пользователя'},
                 status=status.HTTP_400_BAD_REQUEST

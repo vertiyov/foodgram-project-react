@@ -1,30 +1,30 @@
-from django.core.validators import RegexValidator, MinValueValidator
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.db import models
 
 from users.models import User
-from foodgram.settings import NAME_MAX_LENGTH, COLOR_MAX_LENGTH, UNIT_MAX_LENGTH
+from django.conf import settings
+
+from api.core.validators import RegExColorValidator, RegExNameValidator
 
 
 class Tag(models.Model):
     name = models.CharField(
         'Name',
-        max_length=NAME_MAX_LENGTH,
+        max_length=settings.NAME_MAX_LENGTH,
         unique=True,
+        validators=[RegExNameValidator]
+
     )
     slug = models.SlugField(
         'Slug',
-        max_length=NAME_MAX_LENGTH,
+        max_length=settings.NAME_MAX_LENGTH,
         unique=True,
     )
     color = models.CharField(
         'Color',
-        max_length=COLOR_MAX_LENGTH,
+        max_length=settings.COLOR_MAX_LENGTH,
         unique=True,
-        validators=[
-            RegexValidator(
-                regex='^#(?:[0-9a-fA-F]{3}){1,2}$',
-                code='invalid_color'),
-        ]
+        validators=[RegExColorValidator]
     )
 
     def __str__(self):
@@ -34,11 +34,12 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         'Name',
-        max_length=NAME_MAX_LENGTH,
+        max_length=settings.NAME_MAX_LENGTH,
+        validators=[RegExNameValidator]
     )
     unit = models.CharField(
         'Unit',
-        max_length=UNIT_MAX_LENGTH,
+        max_length=settings.UNIT_MAX_LENGTH,
     )
 
     def __str__(self):
@@ -54,14 +55,9 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         'Name',
-        max_length=NAME_MAX_LENGTH,
+        max_length=settings.NAME_MAX_LENGTH,
         unique=True,
-    )
-    ingredients = models.ManyToManyField(
-        Ingredient,
-        through='RecipeIngredient',
-        verbose_name='ingredients',
-        related_name='ingredients'
+        validators=[RegExNameValidator]
     )
     image = models.ImageField(
         'Image',
@@ -78,6 +74,11 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Cooking time',
+        validators=[
+            MinValueValidator(
+                settings.MIN_COOKING_TIME,
+            )
+        ],
     )
 
 
@@ -92,10 +93,14 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ingredient'
+        verbose_name='Ingredient',
+        related_name='+'
     )
-    amount = models.IntegerField(
-        validators=[MinValueValidator(1)],
+    amount = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(settings.MIN_AMOUNT_VALUE),
+            MaxValueValidator(settings.MAX_AMOUNT_VALUE)
+        ],
         verbose_name='Количество ингредиентов'
     )
     def __str__(self):
@@ -113,6 +118,7 @@ class Favorite(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Recipe',
+        related_name='+'
     )
 
     class Meta:
@@ -137,6 +143,7 @@ class ShoppingCart(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
+        related_name='+'
     )
 
     class Meta:

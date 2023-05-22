@@ -2,29 +2,21 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator, RegexValidator
 from django.db import models
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from foodgram.settings import NAME_MAX_LENGTH, PASSWORD_MAX_LENGTH
+from django.conf import settings
+
+from api.core.validators import RegExNameValidator
 
 
 class User(AbstractUser):
     first_name = models.CharField(
         'First name',
-        max_length=NAME_MAX_LENGTH,
-        validators=[
-            RegexValidator(
-            regex='^[A-Za-zА-Яа-я]*$',
-            message='Разрешено использовать только буквы',
-            code='invalid_first_name'),
-        ]
+        max_length=settings.NAME_MAX_LENGTH,
+        validators=[RegExNameValidator]
     )
     last_name = models.CharField(
         'Last name',
-        max_length=NAME_MAX_LENGTH,
-        validators=[
-            RegexValidator(
-                regex='^[A-Za-zА-Яа-я]*$',
-                message='Разрешено использовать только буквы',
-                code='invalid_last_name'),
-        ]
+        max_length=settings.NAME_MAX_LENGTH,
+        validators=[RegExNameValidator]
     )
     email = models.EmailField(
         'Email',
@@ -32,14 +24,13 @@ class User(AbstractUser):
     )
     username = models.CharField(
         'Username',
-        max_length=NAME_MAX_LENGTH,
+        max_length=settings.NAME_MAX_LENGTH,
         unique=True,
-        validators=[MinLengthValidator(3), UnicodeUsernameValidator()]
+        validators=[MinLengthValidator(settings.MIN_USERNAME_LENGTH), UnicodeUsernameValidator()]
     )
     password = models.CharField(
         'Password',
-        max_length=PASSWORD_MAX_LENGTH,
-        unique=True,
+        max_length=settings.PASSWORD_MAX_LENGTH,
     )
 
     class Meta:
