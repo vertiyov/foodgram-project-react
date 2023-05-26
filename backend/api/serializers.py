@@ -3,7 +3,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import create_ingredients
-from recipes.models import (Ingredient, Tag, Recipe, RecipeIngredient, ShoppingCart)
+from recipes.models import (Ingredient, Tag,
+                            Recipe, RecipeIngredient, ShoppingCart)
 from users.models import User, Subscribe
 
 
@@ -108,6 +109,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and request.user.carts.filter(recipe=obj).exists())
+
+
 class RecipeCreateSerializer(serializers.ModelSerializer):
     ingredients = IngredientPostSerializer(
         many=True, source='recipeingredients'
@@ -177,7 +180,6 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             )
         ]
 
-
     def to_representation(self, instance):
         request = self.context.get('request')
         return RecipeShortSerializer(
@@ -238,5 +240,3 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
         return UserSubscribeViewSerializer(
             instance.author, context={'request': request}
         ).data
-
-

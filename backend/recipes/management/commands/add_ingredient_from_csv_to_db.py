@@ -15,6 +15,8 @@ class Command(BaseCommand):
                     name, unit = [*row]
                     bulk_list.append(Ingredient(name=name, unit=unit))
                 Ingredient.objects.bulk_create(bulk_list)
-                return f'{Ingredient.objects.count()} - ингредиенты успешно созданы'
+                return (
+                    f'{Ingredient.objects.count()} - ингредиенты созданы'
+                )
         except FileNotFoundError:
             raise CommandError('Файл не найден')

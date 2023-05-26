@@ -26,7 +26,10 @@ class User(AbstractUser):
         'Username',
         max_length=settings.NAME_MAX_LENGTH,
         unique=True,
-        validators=[MinLengthValidator(settings.MIN_USERNAME_LENGTH), UnicodeUsernameValidator()]
+        validators=[
+            MinLengthValidator(settings.MIN_USERNAME_LENGTH),
+            UnicodeUsernameValidator()
+        ]
     )
     password = models.CharField(
         'Password',
@@ -61,8 +64,8 @@ class Subscribe(models.Model):
                 fields=['user', 'author'],
                 name='unique_subscribe'
             ),
-        models.CheckConstraint(
-            check=~models.Q(author=models.F('user')),
-            name='forbidden_self_subscribe'
-        )
+            models.CheckConstraint(
+                check=~models.Q(author=models.F('user')),
+                name='forbidden_self_subscribe'
+            )
         ]

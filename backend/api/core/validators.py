@@ -10,6 +10,7 @@ def RegExColorValidator(value):
     else:
         raise forms.ValidationError("Введите корректный  Hex-Code")
 
+
 def RegExNameValidator(value):
     regex = '^[A-Za-zА-Яа-я]*$'
     if re.match(regex, value):

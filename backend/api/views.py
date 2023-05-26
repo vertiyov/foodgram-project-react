@@ -1,16 +1,20 @@
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, HttpResponse
-from rest_framework import viewsets, filters, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
+from api.filters import RecipeFilter, IngredientFilter
 from api.permissions import IsAdminAuthorOrReadOnly
 from api.utils import create_model_instance, delete_model_instance
-from recipes.models import Ingredient, Tag, Recipe, Favorite, RecipeIngredient, ShoppingCart
+from recipes.models import (Ingredient, Tag, Recipe,
+                            Favorite, RecipeIngredient, ShoppingCart)
 from users.models import User, Subscribe
 from .serializers import (IngredientSerializer, TagSerializer,
-                          RecipeSerializer, RecipeGetSerializer, RecipeCreateSerializer, ShoppingCartSerializer,
+                          RecipeSerializer, RecipeGetSerializer,
+                          RecipeCreateSerializer, ShoppingCartSerializer,
                           UserSubscribeSerializer, UserSubscribeViewSerializer)
 
 
@@ -18,7 +22,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny, )
-    filter_backends = (filters.SearchFilter, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
     search_fields = ('^name',)
     pagination_class = None
 
@@ -32,7 +37,8 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
     permission_classes = (IsAdminAuthorOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
@@ -96,13 +102,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             amount = ingredient['ingredient_amount']
             shopping_list.append(f'\n{name} - {amount}, {unit}')
         response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_cart.txt"'
+        response[
+            'Content-Disposition'
+        ] = 'attachment; filename="shopping_cart.txt"'
         return response
 
 
 class UserSubscriptionsViewSet(viewsets.ModelViewSet):
     serializer_class = UserSubscribeViewSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated, ]
 
     def get_queryset(self):
         return User.objects.filter(following__user=self.request.user)

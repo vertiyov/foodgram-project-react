@@ -5,3 +5,4 @@ djoser==2.1.0
 requests==2.30.0
 django-filter==23.2
 drf-base64==2.0
+python-dotenv
