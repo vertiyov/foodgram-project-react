@@ -17,3 +17,10 @@ def RegExNameValidator(value):
         return value
     else:
         raise forms.ValidationError("Разрешено использовать только буквы")
+
+def RegExNameRecipeValidator(value):
+    regex = '^[A-Za-zА-Яа-я\s]*$'
+    if re.match(regex, value):
+        return value
+    else:
+        raise forms.ValidationError("Разрешено использовать только буквы")

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-from api.core.validators import RegExColorValidator, RegExNameValidator
+from api.core.validators import RegExColorValidator, RegExNameValidator, RegExNameRecipeValidator
 from users.models import User
 
 
@@ -56,7 +56,7 @@ class Recipe(models.Model):
         'Name',
         max_length=settings.NAME_MAX_LENGTH,
         unique=True,
-        validators=[RegExNameValidator]
+        validators=[RegExNameRecipeValidator]
     )
     image = models.ImageField(
         'Image',
