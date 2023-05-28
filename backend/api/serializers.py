@@ -3,40 +3,27 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import create_ingredients
-from recipes.models import (Ingredient, Tag,
+from recipes.models import (Ingredient, Tag, Favorite,
                             Recipe, RecipeIngredient, ShoppingCart)
 from users.models import User, Subscribe
+from djoser.serializers import UserCreateSerializer
 
 
-class UserGetSerializer(serializers.ModelSerializer):
+class UserSerializer(UserCreateSerializer):
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
-    password = serializers.CharField(write_only=True)
-    is_subscribed = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
+    class Meta(UserCreateSerializer.Meta):
         fields = (
-            'email', 'id', 'username', 'first_name',
-            'last_name', 'password', 'is_subscribed'
+            'username', 'id', 'email', 'first_name', 'last_name', 'password',
+            'is_subscribed',
         )
-        write_only_fields = ('password',)
+        extra_kwargs = {'password': {'write_only': True}}
+        model = User
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         return (request.user.is_authenticated
                 and request.user.follower.filter(author=obj).exists())
-
-    def create(self, validated_data):
-        user = User.objects.create(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
-
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,10 +34,13 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientGetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient.id', read_only=True)
     name = serializers.CharField(source='ingredient.name', read_only=True)
-    unit = serializers.CharField(
-        source='ingredient.unit',
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit',
         read_only=True
     )
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class IngredientPostSerializer(serializers.ModelSerializer):
@@ -87,7 +77,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
-    author = UserGetSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
     ingredients = IngredientGetSerializer(many=True, read_only=True,
                                           source='recipeingredients')
     is_favorited = serializers.SerializerMethodField()
@@ -160,6 +150,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
     def to_representation(self, instance):
         request = self.context.get('request')
         return RecipeGetSerializer(
@@ -188,7 +179,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         ).data
 
 
-class UserSubscribeViewSerializer(UserGetSerializer):
+class UserSubscribeViewSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -207,7 +198,10 @@ class UserSubscribeViewSerializer(UserGetSerializer):
             recipes_limit = request.query_params.get('recipes_limit')
         recipes = obj.recipes.all()
         if recipes_limit:
-            recipes = obj.recipes.all()[:int(recipes_limit)]
+            try:
+                recipes = obj.recipes.all()[:int(recipes_limit)]
+            except Exception as error:
+                print('recipes_limit must include only numbers: ' + str(error))
         return RecipeShortSerializer(recipes, many=True,
                                      context={'request': request}).data
 
@@ -240,3 +234,16 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
         return UserSubscribeViewSerializer(
             instance.author, context={'request': request}
         ).data
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже добавлен в избранное'
+            )
+        ]

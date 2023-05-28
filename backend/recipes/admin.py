@@ -6,7 +6,7 @@ from .models import Ingredient, Tag, Recipe, RecipeIngredient,\
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'unit')
+    list_display = ('name', 'measurement_unit')
 
 
 @admin.register(Tag)

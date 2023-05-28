@@ -15,7 +15,7 @@ from users.models import User, Subscribe
 from .serializers import (IngredientSerializer, TagSerializer,
                           RecipeSerializer, RecipeGetSerializer,
                           RecipeCreateSerializer, ShoppingCartSerializer,
-                          UserSubscribeSerializer, UserSubscribeViewSerializer)
+                          UserSubscribeSerializer, UserSubscribeViewSerializer, FavoriteSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -48,19 +48,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeCreateSerializer
 
     @action(detail=True, methods=['post', 'delete'],
-            permission_classes=(IsAuthenticated,))
+            permission_classes=[IsAuthenticated,])
     def favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
-            serializer = RecipeSerializer(recipe, data=request.data,
-                                          context={"request": request})
-            serializer.is_valid(raise_exception=True)
-            if not request.user.favorites.filter(recipe=recipe).exists():
-                Favorite.objects.create(user=request.user, recipe=recipe)
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
-            return Response({'errors': 'Рецепт уже в избранном.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return create_model_instance(request, recipe, FavoriteSerializer)
+
+        if request.method == 'DELETE':
+            error_message = 'У вас нет этого рецепта в избранном'
+            return delete_model_instance(request, Favorite,
+                                         recipe, error_message)
 
         if request.method == 'DELETE':
             get_object_or_404(Favorite, user=request.user,
@@ -93,12 +90,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ingredients = RecipeIngredient.objects.filter(
             recipe__carts__user=request.user
         ).values(
-            'ingredient__name', 'ingredient__unit'
+            'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(ingredient_amount=Sum('amount'))
         shopping_list = ['Список покупок:\n']
         for ingredient in ingredients:
             name = ingredient['ingredient__name']
-            unit = ingredient['ingredient__unit']
+            unit = ingredient['ingredient__measurement_unit']
             amount = ingredient['ingredient_amount']
             shopping_list.append(f'\n{name} - {amount}, {unit}')
         response = HttpResponse(shopping_list, content_type='text/plain')

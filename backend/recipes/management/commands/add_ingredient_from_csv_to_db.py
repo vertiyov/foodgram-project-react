@@ -13,7 +13,7 @@ class Command(BaseCommand):
                 bulk_list = []
                 for row in reader:
                     name, unit = [*row]
-                    bulk_list.append(Ingredient(name=name, unit=unit))
+                    bulk_list.append(Ingredient(name=name, measurement_unit=unit))
                 Ingredient.objects.bulk_create(bulk_list)
                 return (
                     f'{Ingredient.objects.count()} - ингредиенты созданы'

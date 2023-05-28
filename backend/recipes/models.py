@@ -36,7 +36,7 @@ class Ingredient(models.Model):
         max_length=settings.NAME_MAX_LENGTH,
         validators=[RegExNameValidator]
     )
-    unit = models.CharField(
+    measurement_unit = models.CharField(
         'Unit',
         max_length=settings.UNIT_MAX_LENGTH,
     )
@@ -60,7 +60,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         'Image',
-        upload_to='recipes_image/',
+        upload_to='recipes/',
         blank=True,
     )
     text = models.TextField(
@@ -85,7 +85,7 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='ingredients',
+        related_name='recipeingredients',
         verbose_name='Recipe'
 
     )
