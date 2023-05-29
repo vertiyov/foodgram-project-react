@@ -1,15 +1,15 @@
-version: '3.8'
+version: '3.3'
 services:
 
   db:
     image: postgres:13.0-alpine
     volumes:
-      - db_data:/var/lib/postgresql/data/
+      - ./db_value:/var/lib/postgresql/data/
     env_file:
       - ./.env
-    
-  web:
-    image: vertiyov/backend:latest
+
+  backend:
+    image: vertiyov/foodgram_backend:latest
     restart: always
     volumes:
       - static_value:/app/static/
@@ -20,11 +20,11 @@ services:
       - ./.env
 
   frontend:
-    image: vertiyov/frontend:latest
+    image: vertiyov/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
-      - web
+      - backend
 
   nginx:
     image: nginx:1.21.3-alpine
@@ -36,11 +36,11 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_value:/var/html/static/
       - media_value:/var/html/media/
+      - ../frontend/:/app/result_build/
     depends_on:
-      - web
-    restart: always
+      - backend
 
 volumes:
+  db_value:
   static_value:
   media_value:
-  db_data:
