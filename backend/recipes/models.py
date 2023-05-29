@@ -2,7 +2,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-from api.core.validators import RegExColorValidator, RegExNameValidator, RegExNameRecipeValidator
+from api.core.validators import (RegExColorValidator, RegExNameValidator,
+                                 RegExNameRecipeValidator)
 from users.models import User
 
 

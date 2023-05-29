@@ -13,9 +13,10 @@ from recipes.models import (Ingredient, Tag, Recipe,
                             Favorite, RecipeIngredient, ShoppingCart)
 from users.models import User, Subscribe
 from .serializers import (IngredientSerializer, TagSerializer,
-                          RecipeSerializer, RecipeGetSerializer,
+                          RecipeGetSerializer,
                           RecipeCreateSerializer, ShoppingCartSerializer,
-                          UserSubscribeSerializer, UserSubscribeViewSerializer, FavoriteSerializer)
+                          UserSubscribeSerializer, UserSubscribeViewSerializer,
+                          FavoriteSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -48,9 +49,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeCreateSerializer
 
     @action(detail=True, methods=['post', 'delete'],
-            permission_classes=[IsAuthenticated,])
+            permission_classes=[IsAuthenticated, ])
     def favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
+
         if request.method == 'POST':
             return create_model_instance(request, recipe, FavoriteSerializer)
 

@@ -1,3 +1,4 @@
+from djoser.serializers import UserCreateSerializer
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -6,7 +7,6 @@ from api.utils import create_ingredients
 from recipes.models import (Ingredient, Tag, Favorite,
                             Recipe, RecipeIngredient, ShoppingCart)
 from users.models import User, Subscribe
-from djoser.serializers import UserCreateSerializer
 
 
 class UserSerializer(UserCreateSerializer):
@@ -25,6 +25,7 @@ class UserSerializer(UserCreateSerializer):
         return (request.user.is_authenticated
                 and request.user.follower.filter(author=obj).exists())
 
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
@@ -38,6 +39,7 @@ class IngredientGetSerializer(serializers.ModelSerializer):
         source='ingredient.measurement_unit',
         read_only=True
     )
+
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
@@ -149,7 +151,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         create_ingredients(ingredients, instance)
         instance.save()
         return instance
-
 
     def to_representation(self, instance):
         request = self.context.get('request')
