@@ -16,7 +16,7 @@ class TagAdmin(admin.ModelAdmin):
 
 class RecipeIngredientInLine(admin.StackedInline):
     model = RecipeIngredient
-    extra = 1
+    extra = 0
     min_num = 1
 
 
