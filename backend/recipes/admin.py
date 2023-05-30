@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (Ingredient, Tag, Recipe,
-                     Favorite, ShoppingCart)
+                     Favorite, ShoppingCart, RecipeIngredient)
 
 
 @admin.register(Ingredient)
@@ -14,9 +14,14 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'color')
 
 
+class RecipeIngredientInLine(admin.StackedInline):
+    model = RecipeIngredient
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('author', 'name', 'text')
+    inlines = [RecipeIngredientInLine, ]
 
 
 @admin.register(Favorite)
