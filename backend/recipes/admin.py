@@ -19,10 +19,6 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('author', 'name', 'text')
 
 
-@admin.register(RecipeIngredient)
-class RecipeIngredient(admin.ModelAdmin):
-    list_display = ('recipe', 'ingredient', 'amount')
-
 
 @admin.register(Favorite)
 class Favourite(admin.ModelAdmin):
